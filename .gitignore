@@ -1,0 +1,15 @@
+# env files
+.env
+
+# python
+__pycache__/
+*.pyc
+
+# temp files
+temp/
+
+# vector db (optional)
+faiss_index/
+
+# venv
+venv/
