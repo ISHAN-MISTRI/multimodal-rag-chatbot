@@ -2,13 +2,36 @@ from langchain_openai import ChatOpenAI
 
 
 def create_rag_chain(db):
+
     retriever = db.as_retriever()
 
     llm = ChatOpenAI(model="gpt-4o")
 
     def ask(query):
-        docs = retriever.invoke(query, k=8)
 
+        query_lower = query.lower()
+
+        # enhance image-related queries
+        if "image" in query_lower:
+            query += " OCR extracted image text"
+
+        # retrieve docs
+        docs = retriever.invoke(query, k=10)
+
+        # IMAGE FILTERING
+        if "image" in query_lower:
+
+            image_docs = []
+
+            for doc in docs:
+                if doc.metadata.get("type") == "image":
+                    image_docs.append(doc)
+
+            # use only image docs if found
+            if image_docs:
+                docs = image_docs
+
+        # build context
         context = ""
         sources = []
 
@@ -16,16 +39,18 @@ def create_rag_chain(db):
             context += doc.page_content + "\n\n"
             sources.append(doc.metadata.get("source", "unknown"))
 
+        # prompt
         prompt = f"""
-You are a financial analyst.
+You are an intelligent document analysis assistant.
 
 STRICT RULES:
-- Use ONLY the context
-- Try to interpret financial terms flexibly
-- "price performance" may appear as stock movement, returns, growth, etc.
-- "stock performance" may include margins, growth, revenue trends
-- Do NOT say "not found" unless absolutely no relevant data exists
-- Compare across reports if possible
+- Use ONLY the provided context
+- OCR text may contain noisy or imperfect extraction
+- Infer structured information carefully
+- Never say you cannot view images
+- OCR extracted text from uploaded images is also part of the context
+- If answer exists in context, answer confidently
+- If information truly does not exist, say "Not found in uploaded documents"
 
 Context:
 {context}
@@ -36,6 +61,13 @@ Question:
 
         response = llm.invoke(prompt)
 
-        return response.content + f"\n\nSources: {set(sources)}"
+        unique_sources = list(set(sources))
+
+        source_text = "\n".join([f"- {s}" for s in unique_sources])
+
+        return (
+            response.content
+            + f"\n\n📄 Sources:\n{source_text}"
+        )
 
     return ask
