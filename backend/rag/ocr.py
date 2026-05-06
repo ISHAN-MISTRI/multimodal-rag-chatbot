@@ -12,7 +12,7 @@ def extract_text_from_image(image_path):
     image = Image.open(image_path)
 
     # resize
-    image = image.resize((image.width * 2, image.height * 2))
+    image = image.resize((image.width * 5, image.height * 5))
 
     # grayscale
     image = image.convert("L")
@@ -20,7 +20,7 @@ def extract_text_from_image(image_path):
     # thresholding
     image = image.point(lambda x: 0 if x < 140 else 255)
 
-    custom_config = r'--oem 3 --psm 6'
+    custom_config = r'--oem 3 --psm 11'
 
     # OCR text
     text = pytesseract.image_to_string(
