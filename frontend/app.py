@@ -4,8 +4,8 @@ import requests
 st.title("📄 Multi-PDF Chatbot")
 
 uploaded_files = st.file_uploader(
-    "Upload PDFs",
-    type="pdf",
+    "Upload Files",
+    type=["pdf", "png", "jpg", "jpeg"],
     accept_multiple_files=True
 )
 

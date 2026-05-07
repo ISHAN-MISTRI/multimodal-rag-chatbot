@@ -1,7 +1,7 @@
 from fastapi import FastAPI, UploadFile, File
 import os
 
-from backend.rag.loader import load_all_pdfs
+from backend.rag.loader import load_all_files
 from backend.rag.splitter import split_docs
 from backend.rag.embeddings import get_embeddings
 from backend.rag.vectorstore import create_vectorstore
@@ -33,7 +33,7 @@ async def upload(files: list[UploadFile] = File(...)):
             f.write(await file.read())
 
     # build RAG pipeline
-    docs = load_all_pdfs("temp")
+    docs = load_all_files("temp")
     chunks = split_docs(docs)
     embeddings = get_embeddings()
     db = create_vectorstore(chunks, embeddings)
